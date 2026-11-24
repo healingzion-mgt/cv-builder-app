@@ -1,0 +1,426 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<title>CV & Business Profile Builder</title>
+<meta name="description" content="Free CV/Resume and Business Profile builder — fill a form, see a live preview, download as PDF.">
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#0a1128">
+<style>
+:root{
+  --navy:#0a1128; --navy2:#101a3a; --gold:#d4af37; --gold-light:#f0d878;
+  --bg:#f4f5f8; --card:#ffffff; --border:#e2e4ea; --fg:#15182b; --muted:#6b7080;
+}
+*{box-sizing:border-box;}
+body{margin:0;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Arial,sans-serif;background:var(--bg);color:var(--fg);}
+.topbar{background:linear-gradient(135deg,var(--navy),var(--navy2));color:#fff;padding:16px 18px;display:flex;align-items:center;gap:10px;}
+.topbar .badge{background:var(--gold);color:var(--navy);font-weight:800;font-size:12px;padding:3px 9px;border-radius:999px;}
+.topbar h1{font-size:17px;margin:0;font-weight:800;flex:1;}
+.mode-tabs{display:flex;gap:0;background:#fff;border-bottom:1px solid var(--border);position:sticky;top:0;z-index:5;}
+.mode-tab{flex:1;text-align:center;padding:13px 8px;font-weight:700;font-size:14px;color:var(--muted);cursor:pointer;border-bottom:3px solid transparent;}
+.mode-tab.active{color:var(--navy);border-bottom-color:var(--gold);}
+.view-tabs{display:flex;gap:8px;padding:10px 14px;background:#fff;border-bottom:1px solid var(--border);}
+.vtab{flex:1;text-align:center;padding:9px;border-radius:10px;font-weight:700;font-size:13px;background:var(--bg);color:var(--muted);cursor:pointer;}
+.vtab.active{background:var(--navy);color:#fff;}
+.wrap{max-width:720px;margin:0 auto;padding:14px;}
+.panel{display:none;}
+.panel.active{display:block;}
+.card{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:16px;margin-bottom:14px;}
+.card h3{margin:0 0 10px;font-size:14px;color:var(--navy);text-transform:uppercase;letter-spacing:.04em;}
+label{display:block;font-size:12px;font-weight:700;color:var(--muted);margin:10px 0 4px;}
+input[type=text],input[type=email],input[type=tel],input[type=number],input[type=date],textarea,select{
+  width:100%;padding:11px 12px;border:1.5px solid var(--border);border-radius:10px;font-size:14px;background:#fafbfc;color:var(--fg);font-family:inherit;
+}
+textarea{min-height:70px;resize:vertical;}
+.entry{border:1.5px dashed var(--border);border-radius:12px;padding:12px;margin-top:10px;position:relative;}
+.entry-remove{position:absolute;top:8px;right:8px;background:none;border:none;color:#c13b3b;font-size:13px;cursor:pointer;font-weight:700;}
+.btn{display:inline-block;padding:11px 16px;border-radius:10px;font-weight:700;font-size:14px;border:none;cursor:pointer;text-align:center;}
+.btn-block{width:100%;}
+.btn-navy{background:var(--navy);color:#fff;}
+.btn-gold{background:var(--gold);color:var(--navy);}
+.btn-ghost{background:#fff;border:1.5px solid var(--border);color:var(--fg);}
+.btn-add{background:var(--bg);color:var(--navy);border:1.5px dashed var(--gold);font-size:13px;padding:9px;width:100%;margin-top:8px;}
+.photo-row{display:flex;align-items:center;gap:12px;}
+.photo-preview{width:56px;height:56px;border-radius:50%;background:var(--bg);border:1.5px solid var(--border);object-fit:cover;flex-shrink:0;}
+.sticky-actions{position:sticky;bottom:0;background:linear-gradient(180deg,rgba(244,245,248,0),var(--bg) 25%);padding:14px 14px 18px;display:flex;gap:10px;}
+/* ---- Preview / document ---- */
+#previewOuter{background:#d9dce3;padding:14px;border-radius:14px;}
+#doc{background:#fff;padding:34px 30px;border-radius:4px;box-shadow:0 2px 10px rgba(0,0,0,.08);font-family:Georgia,'Times New Roman',serif;color:#1a1a1a;min-height:400px;}
+#doc .doc-header{display:flex;align-items:center;gap:16px;border-bottom:2.5px solid var(--navy);padding-bottom:14px;margin-bottom:16px;}
+#doc .doc-photo{width:72px;height:72px;border-radius:50%;object-fit:cover;border:2px solid var(--gold);flex-shrink:0;}
+#doc .doc-photo.placeholder{background:var(--bg);}
+#doc h2{margin:0;font-size:24px;color:var(--navy);}
+#doc .doc-title{font-size:13px;color:var(--muted);font-style:italic;margin-top:2px;}
+#doc .doc-contact{font-size:11.5px;color:#444;margin-top:6px;line-height:1.5;}
+#doc h4{font-size:13px;text-transform:uppercase;letter-spacing:.06em;color:var(--navy);border-bottom:1px solid #ddd;padding-bottom:4px;margin:18px 0 8px;}
+#doc p{font-size:13px;line-height:1.55;margin:0 0 8px;}
+#doc .item{margin-bottom:10px;}
+#doc .item-top{display:flex;justify-content:space-between;font-size:13px;font-weight:700;}
+#doc .item-sub{font-size:12px;color:var(--muted);font-style:italic;margin-bottom:3px;}
+#doc .item-desc{font-size:12.5px;white-space:pre-line;}
+#doc .skills-row{display:flex;flex-wrap:wrap;gap:6px;}
+#doc .skill-chip{background:var(--bg);border:1px solid #ddd;border-radius:999px;padding:3px 10px;font-size:11.5px;}
+#doc .doc-footer{margin-top:24px;padding-top:10px;border-top:1px solid #eee;font-size:9.5px;color:#aaa;text-align:center;}
+#doc .empty{color:#bbb;font-style:italic;}
+.hidden{display:none !important;}
+.hint{font-size:11.5px;color:var(--muted);margin-top:6px;}
+@media(min-width:860px){
+  .desktop-cols{display:flex;gap:18px;align-items:flex-start;}
+  .desktop-cols > .col{flex:1;min-width:0;}
+  .view-tabs{display:none;}
+  .panel{display:block !important;}
+}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <span class="badge">HMV</span>
+  <h1>CV &amp; Business Profile Builder</h1>
+</div>
+
+<div class="mode-tabs">
+  <div class="mode-tab active" id="modeTabCv" onclick="setMode('cv')">CV / Resume</div>
+  <div class="mode-tab" id="modeTabBiz" onclick="setMode('biz')">Business Profile</div>
+</div>
+
+<div class="view-tabs">
+  <div class="vtab active" id="vtabForm" onclick="setView('form')">✎ Edit</div>
+  <div class="vtab" id="vtabPreview" onclick="setView('preview')">👁 Preview</div>
+</div>
+
+<div class="wrap">
+  <div class="desktop-cols">
+    <div class="col">
+      <!-- FORM: CV MODE -->
+      <div class="panel active" id="panelFormCv">
+        <div class="card">
+          <h3>Personal Details</h3>
+          <div class="photo-row">
+            <img id="cvPhotoPreview" class="photo-preview" alt="">
+            <div style="flex:1;">
+              <label style="margin-top:0;">Photo (optional)</label>
+              <input type="file" accept="image/*" id="cvPhotoInput" onchange="handlePhoto(event,'cv')">
+            </div>
+          </div>
+          <label>Full Name</label>
+          <input type="text" id="cvName" oninput="render()" placeholder="e.g. Blessing Okafor">
+          <label>Professional Title / Headline</label>
+          <input type="text" id="cvHeadline" oninput="render()" placeholder="e.g. Business Administration Graduate">
+          <label>Phone</label>
+          <input type="tel" id="cvPhone" oninput="render()" placeholder="e.g. 080XXXXXXXX">
+          <label>Email</label>
+          <input type="email" id="cvEmail" oninput="render()" placeholder="e.g. you@email.com">
+          <label>City / Address</label>
+          <input type="text" id="cvCity" oninput="render()" placeholder="e.g. Effurun, Delta State">
+        </div>
+
+        <div class="card">
+          <h3>Professional Summary</h3>
+          <textarea id="cvSummary" oninput="render()" placeholder="2-3 sentences about who you are and what you're looking for."></textarea>
+        </div>
+
+        <div class="card">
+          <h3>Education</h3>
+          <div id="cvEduList"></div>
+          <button class="btn-add" onclick="addEdu()">+ Add Education</button>
+        </div>
+
+        <div class="card">
+          <h3>Work / Internship Experience</h3>
+          <div id="cvExpList"></div>
+          <button class="btn-add" onclick="addExp()">+ Add Experience</button>
+        </div>
+
+        <div class="card">
+          <h3>Skills</h3>
+          <input type="text" id="cvSkills" oninput="render()" placeholder="e.g. Microsoft Excel, Customer Service, Teamwork (comma separated)">
+          <div class="hint">Separate each skill with a comma.</div>
+        </div>
+
+        <div class="card">
+          <h3>Certifications / Extra (optional)</h3>
+          <textarea id="cvExtra" oninput="render()" placeholder="Certifications, languages, volunteer work, etc."></textarea>
+        </div>
+      </div>
+
+      <!-- FORM: BUSINESS PROFILE MODE -->
+      <div class="panel" id="panelFormBiz">
+        <div class="card">
+          <h3>Business Details</h3>
+          <div class="photo-row">
+            <img id="bizPhotoPreview" class="photo-preview" alt="" style="border-radius:10px;">
+            <div style="flex:1;">
+              <label style="margin-top:0;">Logo (optional)</label>
+              <input type="file" accept="image/*" id="bizPhotoInput" onchange="handlePhoto(event,'biz')">
+            </div>
+          </div>
+          <label>Business Name</label>
+          <input type="text" id="bizName" oninput="render()" placeholder="e.g. Chappy Fragrance">
+          <label>Tagline / Slogan</label>
+          <input type="text" id="bizTagline" oninput="render()" placeholder="e.g. Premium scents, honest prices">
+          <label>Owner / Contact Person</label>
+          <input type="text" id="bizOwner" oninput="render()" placeholder="e.g. Precious Zion">
+          <label>Phone</label>
+          <input type="tel" id="bizPhone" oninput="render()" placeholder="e.g. 080XXXXXXXX">
+          <label>Email</label>
+          <input type="email" id="bizEmail" oninput="render()" placeholder="e.g. business@email.com">
+          <label>Address</label>
+          <input type="text" id="bizAddress" oninput="render()" placeholder="e.g. Effurun, Delta State">
+          <label>Year Founded</label>
+          <input type="text" id="bizFounded" oninput="render()" placeholder="e.g. 2023">
+        </div>
+
+        <div class="card">
+          <h3>About the Business</h3>
+          <textarea id="bizAbout" oninput="render()" placeholder="2-4 sentences describing the business and what makes it different."></textarea>
+        </div>
+
+        <div class="card">
+          <h3>Services / Products</h3>
+          <div id="bizServiceList"></div>
+          <button class="btn-add" onclick="addService()">+ Add Service/Product</button>
+        </div>
+
+        <div class="card">
+          <h3>Achievements / Clients (optional)</h3>
+          <textarea id="bizAchieve" oninput="render()" placeholder="Notable clients served, milestones, awards, etc."></textarea>
+        </div>
+      </div>
+    </div>
+
+    <div class="col">
+      <!-- PREVIEW -->
+      <div class="panel" id="panelPreview">
+        <div id="previewOuter">
+          <div id="doc"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="sticky-actions">
+    <button class="btn btn-ghost" style="flex:0 0 auto;" onclick="toggleMobilePreview()" id="mobilePreviewBtn">👁 Preview</button>
+    <button class="btn btn-gold btn-block" onclick="downloadPdf()">⬇ Download as PDF</button>
+  </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+<script>
+let mode = "cv";
+let cvPhotoData = null, bizPhotoData = null;
+let eduCount = 0, expCount = 0, serviceCount = 0;
+let eduEntries = [], expEntries = [], serviceEntries = [];
+
+function qs(id){ return document.getElementById(id); }
+function esc(v){ return (v===null||v===undefined) ? "" : String(v).replace(/</g,"&lt;"); }
+
+function setMode(m){
+  mode = m;
+  qs("modeTabCv").classList.toggle("active", m==="cv");
+  qs("modeTabBiz").classList.toggle("active", m==="biz");
+  qs("panelFormCv").classList.toggle("active", m==="cv");
+  qs("panelFormBiz").classList.toggle("active", m==="biz");
+  render();
+}
+
+function setView(v){
+  const isDesktop = window.matchMedia("(min-width: 860px)").matches;
+  if(isDesktop) return;
+  qs("vtabForm").classList.toggle("active", v==="form");
+  qs("vtabPreview").classList.toggle("active", v==="preview");
+  document.querySelectorAll(".panel").forEach(p => p.classList.remove("active"));
+  if(v==="form"){
+    qs(mode==="cv" ? "panelFormCv" : "panelFormBiz").classList.add("active");
+  } else {
+    qs("panelPreview").classList.add("active");
+  }
+}
+function toggleMobilePreview(){
+  const showingPreview = qs("panelPreview").classList.contains("active");
+  setView(showingPreview ? "form" : "preview");
+}
+
+function handlePhoto(e, which){
+  const file = e.target.files[0];
+  if(!file) return;
+  const reader = new FileReader();
+  reader.onload = () => {
+    if(which === "cv"){ cvPhotoData = reader.result; qs("cvPhotoPreview").src = cvPhotoData; }
+    else { bizPhotoData = reader.result; qs("bizPhotoPreview").src = bizPhotoData; }
+    render();
+  };
+  reader.readAsDataURL(file);
+}
+
+/* ---------- Repeatable: Education ---------- */
+function addEdu(data){
+  const id = "edu" + (eduCount++);
+  eduEntries.push(id);
+  const div = document.createElement("div");
+  div.className = "entry"; div.id = id;
+  div.innerHTML = `
+    <button class="entry-remove" onclick="removeEntry('${id}', eduEntries)">✕ Remove</button>
+    <label style="margin-top:0;">Institution</label>
+    <input type="text" oninput="render()" data-f="school" placeholder="e.g. Delta State Polytechnic">
+    <label>Degree / Course</label>
+    <input type="text" oninput="render()" data-f="degree" placeholder="e.g. HND Business Administration">
+    <label>Years</label>
+    <input type="text" oninput="render()" data-f="years" placeholder="e.g. 2023 - 2026">
+  `;
+  qs("cvEduList").appendChild(div);
+  render();
+}
+function addExp(){
+  const id = "exp" + (expCount++);
+  expEntries.push(id);
+  const div = document.createElement("div");
+  div.className = "entry"; div.id = id;
+  div.innerHTML = `
+    <button class="entry-remove" onclick="removeEntry('${id}', expEntries)">✕ Remove</button>
+    <label style="margin-top:0;">Company / Organization</label>
+    <input type="text" oninput="render()" data-f="company" placeholder="e.g. Healingzion Management Ventures">
+    <label>Role</label>
+    <input type="text" oninput="render()" data-f="role" placeholder="e.g. Intern, Sales Assistant">
+    <label>Years</label>
+    <input type="text" oninput="render()" data-f="years" placeholder="e.g. Jan 2025 - Present">
+    <label>What you did (one point per line)</label>
+    <textarea oninput="render()" data-f="desc" placeholder="e.g. Managed customer inquiries\nAssisted with daily sales records"></textarea>
+  `;
+  qs("cvExpList").appendChild(div);
+  render();
+}
+function addService(){
+  const id = "svc" + (serviceCount++);
+  serviceEntries.push(id);
+  const div = document.createElement("div");
+  div.className = "entry"; div.id = id;
+  div.innerHTML = `
+    <button class="entry-remove" onclick="removeEntry('${id}', serviceEntries)">✕ Remove</button>
+    <label style="margin-top:0;">Service / Product Name</label>
+    <input type="text" oninput="render()" data-f="name" placeholder="e.g. Website Design">
+    <label>Short Description (optional)</label>
+    <input type="text" oninput="render()" data-f="desc" placeholder="e.g. Custom websites for small businesses">
+  `;
+  qs("bizServiceList").appendChild(div);
+  render();
+}
+function removeEntry(id, list){
+  const el = qs(id);
+  if(el) el.remove();
+  const idx = list.indexOf(id);
+  if(idx > -1) list.splice(idx, 1);
+  render();
+}
+function readEntries(list){
+  return list.map(id => {
+    const el = qs(id);
+    if(!el) return null;
+    const fields = {};
+    el.querySelectorAll("[data-f]").forEach(inp => { fields[inp.dataset.f] = inp.value; });
+    return fields;
+  }).filter(Boolean);
+}
+
+/* ---------- Render preview ---------- */
+function render(){
+  const doc = qs("doc");
+  if(mode === "cv"){
+    const name = qs("cvName").value.trim() || "Your Name";
+    const headline = qs("cvHeadline").value.trim();
+    const phone = qs("cvPhone").value.trim();
+    const email = qs("cvEmail").value.trim();
+    const city = qs("cvCity").value.trim();
+    const summary = qs("cvSummary").value.trim();
+    const skills = qs("cvSkills").value.split(",").map(s=>s.trim()).filter(Boolean);
+    const extra = qs("cvExtra").value.trim();
+    const edu = readEntries(eduEntries);
+    const exp = readEntries(expEntries);
+    const contactLine = [phone, email, city].filter(Boolean).join("  ·  ");
+
+    doc.innerHTML = `
+      <div class="doc-header">
+        ${cvPhotoData ? `<img class="doc-photo" src="${cvPhotoData}">` : ``}
+        <div>
+          <h2>${esc(name)}</h2>
+          ${headline ? `<div class="doc-title">${esc(headline)}</div>` : ``}
+          ${contactLine ? `<div class="doc-contact">${esc(contactLine)}</div>` : ``}
+        </div>
+      </div>
+      ${summary ? `<h4>Summary</h4><p>${esc(summary)}</p>` : ``}
+      ${edu.length ? `<h4>Education</h4>` + edu.map(e => `
+        <div class="item">
+          <div class="item-top"><span>${esc(e.school||"")}</span><span>${esc(e.years||"")}</span></div>
+          <div class="item-sub">${esc(e.degree||"")}</div>
+        </div>`).join("") : ``}
+      ${exp.length ? `<h4>Experience</h4>` + exp.map(e => `
+        <div class="item">
+          <div class="item-top"><span>${esc(e.role||"")} ${e.company?"— "+esc(e.company):""}</span><span>${esc(e.years||"")}</span></div>
+          ${e.desc ? `<div class="item-desc">${esc(e.desc)}</div>` : ``}
+        </div>`).join("") : ``}
+      ${skills.length ? `<h4>Skills</h4><div class="skills-row">${skills.map(s=>`<span class="skill-chip">${esc(s)}</span>`).join("")}</div>` : ``}
+      ${extra ? `<h4>Additional</h4><p>${esc(extra)}</p>` : ``}
+      <div class="doc-footer">Built with the free CV &amp; Business Profile Builder by Healingzion Management Ventures</div>
+    `;
+  } else {
+    const name = qs("bizName").value.trim() || "Your Business Name";
+    const tagline = qs("bizTagline").value.trim();
+    const owner = qs("bizOwner").value.trim();
+    const phone = qs("bizPhone").value.trim();
+    const email = qs("bizEmail").value.trim();
+    const address = qs("bizAddress").value.trim();
+    const founded = qs("bizFounded").value.trim();
+    const about = qs("bizAbout").value.trim();
+    const achieve = qs("bizAchieve").value.trim();
+    const services = readEntries(serviceEntries);
+    const contactLine = [owner ? "Contact: "+owner : "", phone, email, address].filter(Boolean).join("  ·  ");
+
+    doc.innerHTML = `
+      <div class="doc-header">
+        ${bizPhotoData ? `<img class="doc-photo" src="${bizPhotoData}" style="border-radius:10px;">` : ``}
+        <div>
+          <h2>${esc(name)}</h2>
+          ${tagline ? `<div class="doc-title">${esc(tagline)}</div>` : ``}
+          ${contactLine ? `<div class="doc-contact">${esc(contactLine)}</div>` : ``}
+          ${founded ? `<div class="doc-contact">Established ${esc(founded)}</div>` : ``}
+        </div>
+      </div>
+      ${about ? `<h4>About Us</h4><p>${esc(about)}</p>` : ``}
+      ${services.length ? `<h4>Services &amp; Products</h4>` + services.map(s => `
+        <div class="item">
+          <div class="item-top"><span>${esc(s.name||"")}</span></div>
+          ${s.desc ? `<div class="item-desc">${esc(s.desc)}</div>` : ``}
+        </div>`).join("") : ``}
+      ${achieve ? `<h4>Achievements &amp; Clients</h4><p>${esc(achieve)}</p>` : ``}
+      <div class="doc-footer">Built with the free CV &amp; Business Profile Builder by Healingzion Management Ventures</div>
+    `;
+  }
+}
+
+function downloadPdf(){
+  const name = (mode === "cv" ? qs("cvName").value : qs("bizName").value).trim() || "Document";
+  const filename = name.replace(/[^a-z0-9]+/gi, "_") + (mode === "cv" ? "_CV" : "_Business_Profile") + ".pdf";
+  const el = qs("doc");
+  if(window.html2pdf){
+    html2pdf().set({
+      margin: 0,
+      filename: filename,
+      image: { type: "jpeg", quality: 0.98 },
+      html2canvas: { scale: 2, useCORS: true },
+      jsPDF: { unit: "pt", format: "a4", orientation: "portrait" }
+    }).from(el).save();
+  } else {
+    window.print();
+  }
+}
+
+/* init */
+addEdu(); addExp(); addService();
+render();
+if("serviceWorker" in navigator){
+  window.addEventListener("load", () => { navigator.serviceWorker.register("sw.js").catch(()=>{}); });
+}
+</script>
+</body>
+</html>
